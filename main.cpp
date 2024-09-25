@@ -32,10 +32,10 @@ public:
 
 private:
   [[no_unique_address]] mutable std::mutex mutex_;
-  [[nodiscard]] Logger(void) noexcept = default;
-  [[nodiscard]] Logger(const Logger &) noexcept = delete;
-  [[nodiscard]] Logger &operator=(const Logger &) noexcept = delete;
-  ~Logger(void) = default;
+  [[nodiscard]] explicit inline Logger(void) noexcept = default;
+  [[nodiscard]] explicit inline Logger(const Logger &) noexcept = delete;
+  [[nodiscard]] inline Logger &operator=(const Logger &) noexcept = delete;
+  inline ~Logger(void) = default;
 };
 
 class HashMismatchException final : public std::exception {
@@ -51,13 +51,13 @@ public:
 
 struct log_task {
   struct promise_type {
-    [[nodiscard]] virtual log_task get_return_object(void) noexcept {
+    [[nodiscard]] inline virtual log_task get_return_object(void) noexcept {
       return log_task{};
     }
-    [[nodiscard]] virtual std::suspend_never initial_suspend(void) noexcept {
+    [[nodiscard]] inline virtual std::suspend_never initial_suspend(void) noexcept {
       return {};
     }
-    [[nodiscard]] virtual std::suspend_never final_suspend(void) noexcept {
+    [[nodiscard]] inline virtual std::suspend_never final_suspend(void) noexcept {
       return {};
     }
     virtual void return_void(void) noexcept {}
@@ -68,8 +68,7 @@ struct log_task {
 // GNU and Clang compilers think there is "switch missing default case"
 // #pragma GCC diagnostic push
 // #pragma GCC diagnostic ignored "-Wswitch-default"
-[[nodiscard]] const inline log_task
-delayed_log(const std::string message) noexcept {
+const inline log_task delayed_log(const std::string message) noexcept {
   co_await std::suspend_always{};
   std::this_thread::sleep_for(std::chrono::milliseconds(69));
   Logger::instance().log(message);
@@ -90,16 +89,16 @@ template <typename T>
   requires Hashable<T>
 class Hash final {
 public:
-  [[nodiscard]] constexpr Hash(void) noexcept {
+  [[nodiscard]] constexpr explicit inline Hash(void) noexcept {
     std::memset(data_, 0, HASH_SIZE * sizeof(T));
   }
 
-  [[nodiscard]] Hash &operator^(const T ch) noexcept {
+  [[nodiscard]] Hash inline &operator^(const T ch) noexcept {
     data_[index_++ % HASH_SIZE] ^= static_cast<T>(ch);
     return *this;
   }
 
-  Hash &operator^=(const T ch) noexcept {
+  inline Hash &operator^=(const T ch) noexcept {
     data_[index_++ % HASH_SIZE] ^= static_cast<T>(ch);
     return *this;
   }
@@ -127,11 +126,11 @@ public:
     alignas(16) const std::string message(static_cast<const char *>(HELLO_WORLD));
     [[assume(message.size() > 0)]];
 
-    alignas(16) Hash<long long int> calculated_hash = {};
+    alignas(16) Hash<long long int> calculated_hash {};
     std::ranges::for_each(message, [&calculated_hash](const auto &ch) noexcept {
       calculated_hash ^= ch;
     });
-    alignas(16) Hash<long long int> expected_hash = {};
+    alignas(16) Hash<long long int> expected_hash {};
     expected_hash =
         ((((((((((((expected_hash ^ 'H') ^ 'e') ^ 'l') ^ 'l') ^ 'o') ^ ',') ^
               ' ') ^
@@ -149,7 +148,7 @@ public:
     std::ranges::for_each(message, [](const auto &ch) { std::cout << ch; });
 
     std::cout << std::endl;
-    auto log_task = delayed_log("Message verified and printed"); // Delay log
+    delayed_log("Message verified and printed"); // Delay log
   }
 
   inline virtual void prepare(void) const noexcept {
@@ -157,7 +156,7 @@ public:
   }
 
 protected:
-  enum class OutputMode { Standard, Advanced } mode_;
+  const enum class OutputMode { Standard, Advanced } mode_;
 };
 
 inline void print_in_thread(const HelloWorldPrinter &printer) noexcept {
