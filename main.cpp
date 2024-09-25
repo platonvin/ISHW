@@ -124,7 +124,9 @@ public:
   // Verify hash and print
   inline virtual void print(void) const {
     alignas(16) const std::string message(static_cast<const char *>(HELLO_WORLD));
-    [[assume(message.size() > 0)]];
+    if (message.empty()) [[unlikely]] {
+        throw std::logic_error("HW message should not be empty"); 
+    }
 
     alignas(16) Hash<long long int> calculated_hash {};
     std::ranges::for_each(message, [&calculated_hash](const auto &ch) noexcept {
@@ -173,10 +175,13 @@ auto main(void) noexcept -> int try {
   alignas(16) thread_local const HelloWorldPrinter printer;
   alignas(16) thread_local std::thread printingThread(print_in_thread,
                                                       std::cref(printer));
-  [[assume(printingThread.joinable())]];
+  if (!printingThread.joinable()) [[unlikely]] {
+        throw std::logic_error("Thread not joinable");
+  }
+
   printingThread.join();
 
-  Logger::instance().log("Main function completed successfully.");
+  Logger::instance().log("Main function completed successfully");
   return 0;
 } catch (const std::exception &e) {
   Logger::instance().log(std::string("Unhandled exception: ") + e.what());
