@@ -9,11 +9,6 @@
 #include <thread>
 #include <typeinfo>
 
-template <typename T>
-concept Loggable = requires(T a, const std::string &message) {
-  { a.log(message) } -> std::same_as<void>;
-};
-
 class Logger final {
 public:
   [[nodiscard]] static inline Logger &instance(void) noexcept {
@@ -21,7 +16,7 @@ public:
     return logger;
   }
 
-  inline virtual void log(const std::string &message) const noexcept {
+  inline virtual void log(const std::string &message) const noexcept{
     std::lock_guard<std::mutex> lock(mutex_);
     std::cout << "[LOG]: " << message << std::endl;
   }
