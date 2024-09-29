@@ -71,8 +71,8 @@ const inline log_task delayed_log(const std::string message) noexcept {
 }
 // #pragma GCC diagnostic pop
 
-alignas(32) const char HELLO_WORLD[] = "Hello, World!";
-constexpr size_t HASH_SIZE = 4;
+alignas(32) static const char HELLO_WORLD[] = "Hello, World!";
+static constexpr size_t HASH_SIZE = 4;
 
 template <typename T>
 concept Hashable = requires(T a, char ch) {
@@ -118,7 +118,7 @@ public:
 
   // Verify hash and print
   inline virtual void print(void) const {
-    alignas(16) const std::string message(static_cast<const char *>(HELLO_WORLD));
+    alignas(16) static const std::string message(static_cast<const char *>(HELLO_WORLD));
     if (message.empty()) [[unlikely]] {
         throw std::logic_error("HW message should not be empty"); 
     }
@@ -127,7 +127,7 @@ public:
     std::ranges::for_each(message, [&calculated_hash](const auto &ch) noexcept {
       calculated_hash ^= ch;
     });
-    alignas(16) Hash<long long int> expected_hash {};
+    alignas(16) static Hash<long long int> expected_hash {};
     expected_hash =
         ((((((((((((expected_hash ^ 'H') ^ 'e') ^ 'l') ^ 'l') ^ 'o') ^ ',') ^
               ' ') ^
@@ -167,8 +167,8 @@ inline void print_in_thread(const HelloWorldPrinter &printer) noexcept {
 }
 
 auto main(void) noexcept -> int try {
-  alignas(16) thread_local const HelloWorldPrinter printer;
-  alignas(16) thread_local std::thread printingThread(print_in_thread,
+  alignas(16) static thread_local const HelloWorldPrinter printer;
+  alignas(16) static thread_local std::thread printingThread(print_in_thread,
                                                       std::cref(printer));
   if (!printingThread.joinable()) [[unlikely]] {
         throw std::logic_error("Thread not joinable");
